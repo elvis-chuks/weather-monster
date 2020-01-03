@@ -1,6 +1,6 @@
 # weather-monster
 
-## Getting Dependencies
+## Setting Up the Project
 
 Make sure you have golang and postgressql installed
 
@@ -46,6 +46,34 @@ CREATE TABLE IF NOT EXISTS webhooks
 
 ```
 
+## Running Tests
+
+
+Run 
+```bash
+	go test -v
+```
+
+## Running the App
+
+To run this app simple run 
+
+```bash  
+		go build
+		weather.exe
+
+	```
+
+
+
+# Comments
+
+When testing endpoints that need the mux.vars method you might experience getting null or 0 values for you id or city_id
+Read more here http://mrgossett.com/post/mux-vars-problem/
+
+To bypass this issue
+I wrote minor tests in a python file
+So if you have a python environment run the tests in that file.
 
 
 
