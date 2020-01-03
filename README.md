@@ -10,6 +10,18 @@ go get github.com/gorilla/mux
 go get github.com/lib/pq
 ```
 
+## Postgressql connection details
+
+```go
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "password"
+	dbname   = "weathermonster"
+	)
+```
+
 ## Create database with 
 ``` sql
 CREATE DATABASE weathermonster
