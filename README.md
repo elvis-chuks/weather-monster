@@ -59,10 +59,9 @@ Run
 To run this app simple run 
 
 ```bash  
-		go build
-		weather.exe
-
-	```
+go build
+weather.exe
+```
 
 
 
