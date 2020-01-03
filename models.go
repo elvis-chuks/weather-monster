@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 	"log"
+	"bytes"
+	"net/http"
+
 
 	_ "github.com/lib/pq"
 )
@@ -105,7 +108,7 @@ func CheckName(c city) int {
 	SELECT name FROM cities WHERE name = '%s'
 	`,c.Name)
 
-	// fmt.Println(c.Name)
+
 
 	var name string
 
@@ -302,7 +305,7 @@ func AddWebhook(w webhook)(webhook, error){
 		return w, err
 	}
 
-	// fmt.Println(w)
+
 
 	return w, nil
 
@@ -347,4 +350,62 @@ func DeleteWebhook(w webhook) error {
 	statement := fmt.Sprintf("DELETE FROM webhooks WHERE id=%d", w.ID)
     _, err := db.Exec(statement)
     return err
+}
+
+func CallWebhooks(w webhook,p string) error {
+	db := InitDB()
+
+	fmt.Println(p)
+
+	statement := fmt.Sprintf(`
+	SELECT callback_url
+	FROM webhooks
+	WHERE city_id = %d
+	`,w.City_ID)
+
+	rows, err := db.Query(statement)
+
+	var wList []webhook
+
+	if err != nil {
+		fmt.Println("error occured")
+		return err
+	}
+
+	defer rows.Close()
+
+	
+	for rows.Next(){
+		var web webhook
+
+		err := rows.Scan(&web.CallbackUrl)
+		if err != nil {
+			return nil
+		}
+
+		wList = append(wList,web)
+	}
+
+	payload := []byte(p)
+
+	for _, i := range wList {
+		
+		req, err := http.NewRequest("POST", i.CallbackUrl, bytes.NewBuffer(payload))
+		req.Header.Set("Content-Type","application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		
+		if err != nil {
+			// incase of an error
+			return err
+		}
+
+		fmt.Println("status:",resp.Status)
+		fmt.Println("Headers:",resp.Header)
+
+		defer resp.Body.Close()
+	}
+
+	return nil
 }

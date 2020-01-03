@@ -188,6 +188,15 @@ func Addtemperature(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(200)
 	w.Write(response)
 
+	var web webhook
+	web.City_ID = t.City_ID
+
+
+	payload := fmt.Sprintf(`{"city_id":%d,"min":%f,"max":%f,"timestamp":%T}`,t.City_ID,t.Min,t.Max,t.Timestamp)
+
+	err = CallWebhooks(web,payload)
+	
+	
 
 }
 

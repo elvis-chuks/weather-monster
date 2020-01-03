@@ -33,6 +33,79 @@ func TestCreateCity(t *testing.T){
 
 }
 
+
+func TestCheckName(t *testing.T){
+	var c city
+
+	c.Name = "India"
+
+	res := CheckName(c)
+
+	correct := 1
+
+	if res != 1 {
+		t.Errorf("Expecting %d here for got %d",correct,res)
+	}
+
+	fmt.Println(res)
+
+}
+
+func TestGet(t *testing.T){
+	c := city{
+		ID: 10,
+	}
+	resp, err := GetMyCity(c)
+
+	if err != nil {
+		t.Errorf("Error executing sql")
+	}
+	fmt.Println(resp)
+}
+
+func TestDelete(t *testing.T){
+	c := city{
+		ID : 11,
+	}
+
+	err := DeleteMyCity(c)
+
+	if err != nil {
+		t.Errorf("error executing sql")
+	}
+}
+
+func TestUpdate(t *testing.T){
+
+	c := city{
+		ID : 11,
+		Name:"Mash",
+		Latitude:34.08,
+		Longitude:89.00,
+	}
+
+	err := UpdateMyCity(c)
+
+	if err != nil {
+		t.Errorf("error executing sql")
+	}
+}
+func TestInsert(t *testing.T){
+	var c city
+
+	c.ID = 1
+	c.Name = "Lagos"
+	c.Latitude = 13.56
+	c.Longitude = 45.67
+
+	_, err := InsertCity(c)
+
+	if err != nil {
+		t.Errorf("Can not perform sql statement at insertcity")
+	}
+
+}
+
 func TestUpdateCity(t *testing.T){
 
 	payload := []byte(`{"name":"Mash","latitude":30.08,"longitude":20.0}`) 
@@ -56,6 +129,7 @@ func TestUpdateCity(t *testing.T){
 
 
 }
+
 
 func TestTemp(t *testing.T){
 	temp := temperature{
@@ -126,6 +200,19 @@ func TestGetForecast(t *testing.T){
 		fmt.Println("tests fail because of a gorilla/mux isssue found here: http://mrgossett.com/post/mux-vars-problem/")
 	}
 }
+func TestAddWebhook(t *testing.T){
+	w := webhook{
+		City_ID:1,
+		CallbackUrl:"http://127.0.0.1:5000",
+	}
+
+	_, err := AddWebhook(w)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+}
 
 func TestCreateWebhook(t *testing.T){
 
@@ -161,7 +248,7 @@ func TestGetWebhook(t *testing.T){
 		t.Errorf(err.Error())
 	}
 
-	// fmt.Println(resp)
+
 }
 
 func TestDeleteWebhook(t *testing.T){
@@ -195,88 +282,23 @@ func TestDeleteWebhookEndpoint(t *testing.T){
 }
 
 
-// func TestAddWebhook(t *testing.T){
+
+// will fail if the callback_url doesnt exist
+
+// func TestCallWebhooks(t *testing.T){
 // 	w := webhook{
 // 		City_ID:1,
-// 		CallbackUrl:"http://127.0.0.1:5000",
 // 	}
+// 	payload := `{"city_id":1,"max":32,"min":18,"timestamp":"2020-01-03T15:11:04.650729+01:00"}`
 
-// 	resp, err := AddWebhook(w)
+// 	err := CallWebhooks(w,payload)
 
 // 	if err != nil {
 // 		t.Errorf(err.Error())
 // 	}
 
-// 	// fmt.Println(resp)
-// }
-// func TestGet(t *testing.T){
-// 	c := city{
-// 		ID: 10,
-// 	}
-// 	resp, err := GetMyCity(c)
-
-// 	if err != nil {
-// 		t.Errorf("Error executing sql")
-// 	}
-// 	fmt.Println(resp)
 // }
 
-// func TestDelete(t *testing.T){
-// 	c := city{
-// 		ID : 11,
-// 	}
 
-// 	err := DeleteMyCity(c)
 
-// 	if err != nil {
-// 		t.Errorf("error executing sql")
-// 	}
-// }
 
-// func TestUpdate(t *testing.T){
-
-// 	c := city{
-// 		ID : 11,
-// 		Name:"Mash",
-// 		Latitude:34.08,
-// 		Longitude:89.00,
-// 	}
-
-// 	err := UpdateMyCity(c)
-
-// 	if err != nil {
-// 		t.Errorf("error executing sql")
-// 	}
-// }
-// func TestInsert(t *testing.T){
-// 	var c city
-
-// 	c.ID = 1
-// 	c.Name = "Lagos"
-// 	c.Latitude = 13.56
-// 	c.Longitude = 45.67
-
-// 	err := InsertCity(c)
-
-// 	if err != nil {
-// 		t.Errorf("Can not perform sql statement at insertcity")
-// 	}
-
-// }
-
-func TestCheckName(t *testing.T){
-	var c city
-
-	c.Name = "India"
-
-	res := CheckName(c)
-
-	correct := 1
-
-	if res != 1 {
-		t.Errorf("Expecting %d here for got %d",correct,res)
-	}
-
-	fmt.Println(res)
-
-}
