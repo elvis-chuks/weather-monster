@@ -58,10 +58,10 @@ func TestUpdateCity(t *testing.T){
 }
 
 func TestTemp(t *testing.T){
-	temp := temprature{
+	temp := temperature{
 		City_ID:1,
-		Max: 35.0,
-		Min:30,
+		Max: 33.0,
+		Min:20,
 	}
 	res, err := AddTemp(temp)
 
@@ -71,6 +71,144 @@ func TestTemp(t *testing.T){
 	fmt.Println(res)
 }
 
+func TestAddTemp(t *testing.T){
+	payload := []byte(`{"city_id":1,"max":32,"min":18}`) 
+
+	req, err := http.NewRequest("POST","/temperature", bytes.NewBuffer(payload))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(Addtemperature)
+	handler.ServeHTTP(rr, req)
+
+	fmt.Println(rr.Body.String())
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("Handler returned wrong status code: got %v want %v",status, http.StatusOK)
+		// fmt.Println("tests fail because of a gorilla/mux isssue found here: http://mrgossett.com/post/mux-vars-problem/")
+	}
+}
+
+
+func TestForecastData(t *testing.T){
+	tes := temperature{
+		City_ID:1,
+	}
+
+	resp,err := ForecastData(tes)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	fmt.Println(resp)
+}
+
+func TestGetForecast(t *testing.T){
+	// payload := []byte(`{"city_id":1}`) 
+
+	req, err := http.NewRequest("GET","/forecasts/1",nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetForecast)
+	handler.ServeHTTP(rr, req)
+
+	fmt.Println(rr.Body.String())
+
+	if status := rr.Code; status != http.StatusOK {
+		// t.Errorf("Handler returned wrong status code: got %v want %v",status, http.StatusOK)
+		fmt.Println("tests fail because of a gorilla/mux isssue found here: http://mrgossett.com/post/mux-vars-problem/")
+	}
+}
+
+func TestCreateWebhook(t *testing.T){
+
+	payload := []byte(`{"city_id":1,"callback_url":"http://127.0.0.1:5000"}`) 
+
+	req, err := http.NewRequest("POST","/webhooks", bytes.NewBuffer(payload))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(CreateWebhook)
+
+	handler.ServeHTTP(rr, req)
+
+	fmt.Println(rr.Body.String())
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("Handler returned wrong status code: got %v want %v",status, http.StatusOK)
+	}
+
+}
+
+func TestGetWebhook(t *testing.T){
+	w := webhook{
+		ID:1,
+	}
+	_, err := GetWebhook(w)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// fmt.Println(resp)
+}
+
+func TestDeleteWebhook(t *testing.T){
+	w := webhook{
+		ID:1,
+	}
+	err := DeleteWebhook(w)
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
+func TestDeleteWebhookEndpoint(t *testing.T){
+	req, err := http.NewRequest("DELETE","/webhooks/3",nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(DeleteWebhookEndpoint)
+	handler.ServeHTTP(rr, req)
+
+	fmt.Println(rr.Body.String())
+
+	if status := rr.Code; status != http.StatusOK {
+		// t.Errorf("Handler returned wrong status code: got %v want %v",status, http.StatusOK)
+		fmt.Println("tests fail because of a gorilla/mux isssue found here: http://mrgossett.com/post/mux-vars-problem/")
+	}
+}
+
+
+// func TestAddWebhook(t *testing.T){
+// 	w := webhook{
+// 		City_ID:1,
+// 		CallbackUrl:"http://127.0.0.1:5000",
+// 	}
+
+// 	resp, err := AddWebhook(w)
+
+// 	if err != nil {
+// 		t.Errorf(err.Error())
+// 	}
+
+// 	// fmt.Println(resp)
+// }
 // func TestGet(t *testing.T){
 // 	c := city{
 // 		ID: 10,

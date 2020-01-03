@@ -19,12 +19,20 @@ CREATE TABLE IF NOT EXISTS cities
 )
 `
 const createtempquery = `
-CREATE TABLE IF NOT EXISTS temprature
+CREATE TABLE IF NOT EXISTS temperature
 (
-	city_id SERIAL PRIMARY KEY,
+	city_id INT NOT NULL,
 	max FLOAT(8) NOT NULL,
 	min FLOAT(8) NOT NULL,
-	time_stamp TIMESTAMPTZ NOT NULL
+	time_stamp timestamptz NOT NULL DEFAULT now()
+)`
+
+const createwebhook = `
+CREATE TABLE IF NOT EXISTS webhooks
+(
+	id SERIAL PRIMARY KEY,
+	city_id INT NOT NULL,
+	callback_url VARCHAR NOT NULL
 )`
 
 var db *sql.DB
@@ -37,11 +45,25 @@ type city struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type temprature struct {
+type temperature struct {
 	City_ID int `json:"city_id"`
 	Max float64 `json:"max"`
 	Min float64 `json:"min"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+type forecast struct {
+	City_ID int `json:"city_id"`
+	Max int `json:"max"`
+	Min int `json:"min"`
+	Sample int `json:"sample"`
+}
+
+
+type webhook struct {
+	ID int `json:"id"`
+	City_ID int `json:"city_id"`
+	CallbackUrl string `json:"callback_url"`
 }
 
 func InitDB() *sql.DB{
@@ -66,6 +88,9 @@ func InitDB() *sql.DB{
 		}
 
 		if _, err := db.Exec(createtempquery); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := db.Exec(createwebhook); err != nil {
 			log.Fatal(err)
 		}
 		return db
@@ -182,17 +207,19 @@ func GetMyCity(c city) (city, error){
 	return c1, nil
 }
 
-func AddTemp(t temprature) (temprature,error){
+func AddTemp(t temperature) (temperature,error){
 
 	db := InitDB()
-	Time_Stamp := time.Now()
-	statement := fmt.Sprintf(`
-	INSERT INTO temprature(city_id,max,min,time_stamp)
-	VALUES (%d,%f,%f,%T)
-	`,t.City_ID,t.Max,t.Min,time.Now())
 
-	fmt.Println(statement)
-	_, err := db.Exec(statement)
+	var Time_Stamp time.Time
+
+	statement := fmt.Sprintf(`
+	INSERT INTO temperature(city_id,max,min)
+	VALUES (%d,%f,%f) RETURNING time_stamp
+	`,t.City_ID,t.Max,t.Min)
+
+
+	err := db.QueryRow(statement).Scan(&Time_Stamp)
 
 	if err != nil {
 		return t, err
@@ -204,4 +231,120 @@ func AddTemp(t temprature) (temprature,error){
 
 }
 
+func ForecastData(t temperature) (forecast,error){
+	db := InitDB()
 
+	statement := fmt.Sprintf(`
+	select max,min from temperature where city_id = %d
+	`,t.City_ID)
+
+	rows, err := db.Query(statement)
+
+	var f forecast
+
+	if err != nil {
+		fmt.Println("error occured")
+		return f,err
+	}
+
+	defer rows.Close()
+
+	var maxlist []int
+	var minlist []int
+
+	for rows.Next(){
+		var max int
+		var min int
+		err := rows.Scan(&max,&min)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		maxlist = append(maxlist,max)
+		minlist = append(minlist,min)
+	}
+
+	
+
+	f.Sample = len(maxlist)
+
+	for _,i := range maxlist {
+		f.Max += i
+	}
+
+	for _,i := range minlist {
+		f.Min += i
+	}
+
+	f.Max = f.Max/f.Sample
+	f.Min = f.Min/f.Sample
+
+
+	return f,nil
+
+}
+
+func AddWebhook(w webhook)(webhook, error){
+	db := InitDB()
+
+	statement := fmt.Sprintf(`
+	INSERT INTO webhooks(city_id,callback_url)
+	VALUES (%d,'%s')
+	RETURNING id
+	`,w.City_ID,w.CallbackUrl)
+
+	
+	err := db.QueryRow(statement).Scan(&w.ID)
+
+	if err != nil {
+
+		return w, err
+	}
+
+	// fmt.Println(w)
+
+	return w, nil
+
+
+}
+
+func GetWebhook(w webhook) (webhook, error){
+	db := InitDB()
+
+	statement := fmt.Sprintf(`
+	SELECT city_id,callback_url
+	FROM webhooks
+	WHERE id = %d
+	`,w.ID)
+
+	rows, err := db.Query(statement)
+
+	if err != nil {
+		fmt.Println("error occured")
+		return w,err
+	}
+
+	defer rows.Close()
+
+	var w1 webhook
+
+	w1.ID = w.ID
+
+	for rows.Next(){
+		err := rows.Scan(&w1.City_ID,&w1.CallbackUrl)
+		if err != nil {
+			return w1, nil
+		}
+	}
+
+	return w1, nil
+}
+
+func DeleteWebhook(w webhook) error {
+	db := InitDB()
+
+	statement := fmt.Sprintf("DELETE FROM webhooks WHERE id=%d", w.ID)
+    _, err := db.Exec(statement)
+    return err
+}

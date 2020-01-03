@@ -29,13 +29,21 @@ CREATE TABLE IF NOT EXISTS cities
 	longitude VARCHAR(50) NOT NULL
 )
 
-CREATE TABLE IF NOT EXISTS temprature
+CREATE TABLE IF NOT EXISTS temperature
 (
-	city_id SERIAL PRIMARY KEY,
+	city_id INT NOT NULL,
 	max FLOAT(8) NOT NULL,
 	min FLOAT(8) NOT NULL,
-	time_stamp VARCHAR NOT NULL
+	time_stamp timestamptz NOT NULL DEFAULT now()
 )
+
+CREATE TABLE IF NOT EXISTS webhooks
+(
+	id SERIAL PRIMARY KEY,
+	city_id INT NOT NULL,
+	callback_url VARCHAR NOT NULL
+)
+
 ```
 
 
